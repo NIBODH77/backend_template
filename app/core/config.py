@@ -124,8 +124,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # 🔹 CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # 🔹 CORS - Allow all origins for Replit environment
+    BACKEND_CORS_ORIGINS: List[str] = ["*"]
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):
@@ -133,8 +133,8 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",")]
         return v
 
-    # 🔹 Hosts
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    # 🔹 Hosts - Allow all hosts for Replit proxy
+    ALLOWED_HOSTS: List[str] = ["*"]
 
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_allowed_hosts(cls, v):
@@ -145,10 +145,10 @@ class Settings(BaseSettings):
     # 🔹 Admin
     DEFAULT_ADMIN_EMAIL: str = "admin@ramaera.com"
 
-    # 🔹 Razorpay settings
+    # 🔹 Razorpay settings - Use environment variables for security
     APP_NAME: str = "Razorpay Payment Gateway"
-    RAZORPAY_KEY_ID: str = "rzp_test_RcsDiWWWebnqQU"
-    RAZORPAY_KEY_SECRET: str = "d1nEKpJ4q16QF2a7J7IydP9J"
+    RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "")
+    RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "")
 
     class Config:
         env_file = ".env"

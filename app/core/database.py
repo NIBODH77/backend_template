@@ -81,10 +81,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-DATABASE_URL = os.getenv(
+raw_database_url = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://postgres:nibodh%40123@localhost/ramaera_hosting"
 )
+
+DATABASE_URL = raw_database_url.replace("postgresql://", "postgresql+asyncpg://") if raw_database_url.startswith("postgresql://") else raw_database_url
 
 # ✅ Use consistent name 'engine'
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
