@@ -81,10 +81,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-raw_database_url = os.getenv(
-    "DATABASE_URL",
-    "sqlite+aiosqlite:///./ramaera_hosting.db"
-)
+# Force SQLite for local development
+raw_database_url = "sqlite+aiosqlite:///./ramaera_hosting.db"
 
 # Convert PostgreSQL URL to async and remove unsupported parameters
 if raw_database_url.startswith("postgresql://") or raw_database_url.startswith("postgresql+"):
