@@ -49,8 +49,11 @@ else:
 # Remove sslmode parameter for sync PostgreSQL driver
 sync_url = re.sub(r'[?&]sslmode=[^&]*', '', sync_url)
 
+# Escape % signs for ConfigParser (% -> %%)
+escaped_url = sync_url.replace('%', '%%')
+
 # Override the sqlalchemy.url in alembic.ini
-config.set_main_option("sqlalchemy.url", sync_url)
+config.set_main_option("sqlalchemy.url", escaped_url)
 print(f"📊 Using database: {'PostgreSQL' if 'postgresql' in sync_url else 'SQLite'}")
 
 
