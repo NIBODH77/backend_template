@@ -34,3 +34,7 @@ outputType = "console"
 localPort = 8000
 externalPort = 8000
 exposeLocalhost = true
+
+[[ports]]
+localPort = 33339
+externalPort = 80

@@ -1,0 +1,50 @@
+✅ Logging configured successfully
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/bin/alembic", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/config.py", line 630, in main
+    CommandLine(prog=prog).main(argv=argv)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/config.py", line 624, in main
+    self.run_cmd(cfg, options)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/config.py", line 601, in run_cmd
+    fn(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/command.py", line 398, in upgrade
+    script.run_env()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/script/base.py", line 579, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 93, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 109, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/runner/workspace/alembic/env.py", line 28, in <module>
+    from app.models.base import Base
+  File "/home/runner/workspace/app/models/base.py", line 6, in <module>
+    from app.core.database import Base
+  File "/home/runner/workspace/app/core/database.py", line 101, in <module>
+    engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/engine.py", line 117, in create_async_engine
+    sync_engine = _create_engine(url, **kw)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 552, in create_engine
+    entrypoint = u._get_entrypoint()
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/url.py", line 754, in _get_entrypoint
+    cls = registry.load(name)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 364, in load
+    loader = self.auto_fn(name)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/dialects/__init__.py", line 31, in _auto_fn
+    dialect, driver = name.split(".")
+    ^^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)

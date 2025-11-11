@@ -30,11 +30,28 @@ from app.models.base import Base
 # ✅ Set target metadata
 target_metadata = Base.metadata
 
-# ✅ Use SQLite for local development (same as database.py)
-sync_url = "sqlite:///./ramaera_hosting.db"
+# ✅ Get database URL from environment and convert for sync use
+import re
+raw_db_url = os.getenv("DATABASE_URL", "sqlite:///./ramaera_hosting.db")
+
+# Convert async PostgreSQL URL to sync for Alembic
+if raw_db_url.startswith("postgresql+asyncpg://"):
+    sync_url = raw_db_url.replace("postgresql+asyncpg://", "postgresql://")
+elif raw_db_url.startswith("postgresql://"):
+    sync_url = raw_db_url
+elif "sqlite+aiosqlite" in raw_db_url:
+    sync_url = raw_db_url.replace("+aiosqlite", "")
+elif "sqlite" in raw_db_url:
+    sync_url = raw_db_url
+else:
+    sync_url = "sqlite:///./ramaera_hosting.db"
+
+# Remove sslmode parameter for sync PostgreSQL driver
+sync_url = re.sub(r'[?&]sslmode=[^&]*', '', sync_url)
 
 # Override the sqlalchemy.url in alembic.ini
 config.set_main_option("sqlalchemy.url", sync_url)
+print(f"📊 Using database: {'PostgreSQL' if 'postgresql' in sync_url else 'SQLite'}")
 
 
 def run_migrations_offline() -> None:

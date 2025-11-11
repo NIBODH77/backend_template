@@ -80,9 +80,13 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+import re
 
-# Force SQLite for local development
-raw_database_url = "sqlite+aiosqlite:///./ramaera_hosting.db"
+# Get database URL from environment or use SQLite as fallback
+raw_database_url = os.getenv(
+    "DATABASE_URL",
+    "sqlite+aiosqlite:///./ramaera_hosting.db"
+)
 
 # Convert PostgreSQL URL to async and remove unsupported parameters
 if raw_database_url.startswith("postgresql://") or raw_database_url.startswith("postgresql+"):
@@ -90,12 +94,16 @@ if raw_database_url.startswith("postgresql://") or raw_database_url.startswith("
     DATABASE_URL = raw_database_url.replace("postgresql://", "postgresql+asyncpg://")
     if "postgresql+psycopg2://" in DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+    
     # Remove sslmode parameter (asyncpg doesn't support it)
-    if "?sslmode=" in DATABASE_URL or "&sslmode=" in DATABASE_URL:
-        DATABASE_URL = DATABASE_URL.split("?sslmode=")[0].split("&sslmode=")[0]
+    # Use regex to properly remove the parameter
+    DATABASE_URL = re.sub(r'[?&]sslmode=[^&]*', '', DATABASE_URL)
 else:
     # Use SQLite for local testing
-    DATABASE_URL = raw_database_url.replace("sqlite://", "sqlite+aiosqlite://") if "sqlite://" in raw_database_url else raw_database_url
+    if raw_database_url.startswith("sqlite://"):
+        DATABASE_URL = raw_database_url.replace("sqlite://", "sqlite+aiosqlite://")
+    else:
+        DATABASE_URL = raw_database_url
 
 # ✅ Use consistent name 'engine'
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
