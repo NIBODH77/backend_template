@@ -83,10 +83,21 @@ import os
 
 raw_database_url = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:nibodh%40123@localhost/ramaera_hosting"
+    "sqlite+aiosqlite:///./ramaera_hosting.db"
 )
 
-DATABASE_URL = raw_database_url.replace("postgresql://", "postgresql+asyncpg://") if raw_database_url.startswith("postgresql://") else raw_database_url
+# Convert PostgreSQL URL to async and remove unsupported parameters
+if raw_database_url.startswith("postgresql://") or raw_database_url.startswith("postgresql+"):
+    # Replace with asyncpg driver
+    DATABASE_URL = raw_database_url.replace("postgresql://", "postgresql+asyncpg://")
+    if "postgresql+psycopg2://" in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+    # Remove sslmode parameter (asyncpg doesn't support it)
+    if "?sslmode=" in DATABASE_URL or "&sslmode=" in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.split("?sslmode=")[0].split("&sslmode=")[0]
+else:
+    # Use SQLite for local testing
+    DATABASE_URL = raw_database_url.replace("sqlite://", "sqlite+aiosqlite://") if "sqlite://" in raw_database_url else raw_database_url
 
 # ✅ Use consistent name 'engine'
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)

@@ -54,10 +54,12 @@ tests/                 # Test files
   - Installed Python 3.11 and all dependencies
   - Configured PostgreSQL database with AsyncPG
   - Updated CORS and allowed hosts for Replit's proxy environment
-  - Fixed database URL handling (auto-converts to asyncpg)
+  - Fixed database URL handling (auto-converts to asyncpg and removes unsupported sslmode parameter)
+  - Added SQLite fallback support for local testing (uses aiosqlite)
   - Applied database migrations (initial_tables)
   - Configured backend to run on localhost:8000
   - Moved Razorpay API keys to environment variables for security
+  - Fixed model relationships (removed non-existent PaymentModel and SubscriptionModel references)
 
 ## Configuration
 The application uses environment variables for configuration:

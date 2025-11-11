@@ -556,9 +556,9 @@ class UserProfile(Base):
     orders = relationship("Order", back_populates="user")
     invoices = relationship("Invoice", back_populates="user")
 
-    # 🔹 NEW: Payment relationships
-    payments = relationship("PaymentModel", back_populates="user")
-    subscriptions = relationship("SubscriptionModel", back_populates="user")
+    # 🔹 Payment relationships (commented out - models don't exist yet)
+    # payments = relationship("PaymentModel", back_populates="user")
+    # subscriptions = relationship("SubscriptionModel", back_populates="user")
 
     # Referral Relationships
     referral_payouts = relationship(
