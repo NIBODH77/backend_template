@@ -19,3 +19,4 @@
 #     "support",
 #     "settings"
 # ]
+from . import payments

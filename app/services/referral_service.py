@@ -1451,11 +1451,16 @@ class ReferralService:
         """
         Create 3-level referral earnings whenever an order completes.
         Automatically tracks commissions for up to 3 upline users.
+        If user has no referrer, commission goes to L1 referrer only.
         """
         result = await db.execute(select(UserProfile).where(UserProfile.id == user_id))
         user = result.scalar_one_or_none()
-        if not user or not user.referred_by:
-            return  # ❌ No referrer chain found
+        if not user:
+            return  # ❌ User not found
+        
+        if not user.referred_by:
+            print(f"ℹ️ User {user_id} has no referrer, skipping commission")
+            return  # No referrer chain
 
         structure = (
             self.RECURRING_COMMISSIONS if plan_type == "recurring"
