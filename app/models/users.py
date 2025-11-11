@@ -523,10 +523,14 @@ class UserProfile(Base):
     phone = Column(String(20), nullable=True)
     company = Column(String(255), nullable=True)
 
-    # 🔹 New fields
+    # 🔹 Subscription & Payment fields
     subscription_status = Column(String, default="inactive")
     subscription_start = Column(DateTime, nullable=True)
     subscription_end = Column(DateTime, nullable=True)
+    
+    # Activation tracking
+    activation_type = Column(String(20), default="direct", nullable=False)  # direct or referral
+    discount_percent = Column(Numeric(5, 2), default=0.00)  # User-specific discount percentage
 
     # ----------------------------------------------------
     # Timestamp Fields
@@ -556,9 +560,13 @@ class UserProfile(Base):
     orders = relationship("Order", back_populates="user")
     invoices = relationship("Invoice", back_populates="user")
 
-    # 🔹 Payment relationships (commented out - models don't exist yet)
-    # payments = relationship("PaymentModel", back_populates="user")
-    # subscriptions = relationship("SubscriptionModel", back_populates="user")
+    # Payment Transactions
+    payment_transactions = relationship(
+        "PaymentTransaction",
+        back_populates="user",
+        foreign_keys="[PaymentTransaction.user_id]",
+        cascade="all, delete-orphan"
+    )
 
     # Referral Relationships
     referral_payouts = relationship(

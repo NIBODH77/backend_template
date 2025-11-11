@@ -19,6 +19,10 @@ class Order(Base):
     order_status = Column(String(50), default='pending', nullable=False)          # pending, active, cancelled, completed, expired
     payment_status = Column(String(50), default='pending', nullable=False)        # pending, paid, failed, refunded, partially_refunded
     billing_cycle = Column(String(50), nullable=False)                            # monthly, quarterly, annual, biennial, triennial
+    
+    # Payment Classification
+    payment_type = Column(String(20), default='subscription', nullable=False)     # subscription or server
+    activation_type = Column(String(20), nullable=True)                           # direct or referral (from user)
 
     # 🔹 Financial Details
     total_amount = Column(Numeric(10, 2), nullable=False)
@@ -82,8 +86,14 @@ class Order(Base):
         cascade="all, delete-orphan",
         lazy="select"  # 🔹 Better performance
     )
-
-    referral_earnings = relationship("ReferralEarning", back_populates="order")
+    
+    # Link to payment transaction (one order can have one payment)
+    payment_transaction = relationship(
+        "PaymentTransaction",
+        back_populates="order",
+        uselist=False,  # One-to-one relationship
+        foreign_keys="[PaymentTransaction.order_id]"
+    )
 
     # 🔹 Comprehensive indexes for optimal query performance
     __table_args__ = (
