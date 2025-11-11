@@ -1647,6 +1647,61 @@ class ReferralService:
             db.add(payout)
         return True
 
+    async def complete_payout(self, db: AsyncSession, payout_id: int) -> bool:
+        """Mark payout as completed after bank transfer"""
+        result = await db.execute(select(ReferralPayout).where(ReferralPayout.id == payout_id))
+        payout = result.scalar_one_or_none()
+        if not payout or payout.status != "approved":
+            return False
+
+        payout.status = "completed"
+        
+        # Mark all related earnings as paid
+        await db.execute(
+            select(ReferralEarning)
+            .where(ReferralEarning.user_id == payout.user_id, ReferralEarning.status == "pending")
+        )
+        earnings_result = await db.execute(
+            select(ReferralEarning).where(
+                ReferralEarning.user_id == payout.user_id,
+                ReferralEarning.status == "pending"
+            )
+        )
+        earnings = earnings_result.scalars().all()
+        
+        for earning in earnings:
+            earning.status = "paid"
+            earning.paid_at = datetime.now()
+
+        async with db.begin():
+            db.add(payout)
+        return True
+
+    async def get_user_payouts(self, db: AsyncSession, user_id: int) -> List[ReferralPayout]:
+        """Get all payout requests for a user"""
+        result = await db.execute(
+            select(ReferralPayout)
+            .where(ReferralPayout.user_id == user_id)
+            .order_by(ReferralPayout.requested_at.desc())
+        )
+        return result.scalars().all()
+
+    async def get_all_payouts(self, db: AsyncSession, status: str = "all") -> List[ReferralPayout]:
+        """Get all payout requests (Admin)"""
+        query = select(ReferralPayout).order_by(ReferralPayout.requested_at.desc())
+        if status != "all":
+            query = query.where(ReferralPayout.status == status)
+        
+        result = await db.execute(query)
+        return result.scalars().all()
+
+    async def get_referred_users(self, db: AsyncSession, user_id: int):
+        """Get list of users referred by this user"""
+        result = await db.execute(
+            select(UserProfile).where(UserProfile.referred_by == user_id)
+        )
+        return result.scalars().all()
+
     # --------------------------------------------------------
     # ✅ Admin Overview Stats
     # --------------------------------------------------------

@@ -1,118 +1,3 @@
-# # from sqlalchemy import Column, String, Integer, DateTime, Boolean, Numeric, ForeignKey, Text, JSON
-# # from sqlalchemy.sql import func
-# # from sqlalchemy.orm import relationship
-# # from app.core.database import Base
-
-# # class Order(Base):
-# #     __tablename__ = "orders"
-    
-# #     id = Column(Integer, primary_key=True, autoincrement=True)
-# #     user_id = Column(Integer, ForeignKey('users_profiles.id'), nullable=False)
-# #     plan_id = Column(Integer, ForeignKey('hosting_plans.id'), nullable=False)
-    
-# #     # Order details
-# #     order_number = Column(String(100), unique=True, nullable=False, index=True)
-# #     order_status = Column(String(50), default='pending')
-# #     total_amount = Column(Numeric(10, 2), nullable=False)
-# #     payment_status = Column(String(50), default='pending')
-    
-# #     # Billing cycle
-# #     billing_cycle = Column(String(50), nullable=False)  # monthly, quarterly, annual, etc.
-    
-# #     # Server details (if order is for server)
-# #     server_details = Column(JSON, nullable=True)
-    
-# #     # Payment information
-# #     payment_method = Column(String(100), nullable=True)
-# #     payment_reference = Column(String(255), nullable=True)
-# #     payment_date = Column(DateTime(timezone=True), nullable=True)
-    
-# #     # Timestamps
-# #     created_at = Column(DateTime(timezone=True), server_default=func.now())
-# #     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-# #     # Relationships
-# #     user = relationship("UserProfile", back_populates="orders")
-# #     plan = relationship("HostingPlan", back_populates="orders")
-
-
-
-
-# # from sqlalchemy import Column, String, Integer, DateTime, Numeric, ForeignKey, JSON, Index
-# # from sqlalchemy.sql import func
-# # from sqlalchemy.orm import relationship
-# # from app.core.database import Base
-
-
-# # class Order(Base):
-# #     __tablename__ = "orders"
-
-# #     # 🔹 Primary Key
-# #     id = Column(Integer, primary_key=True, autoincrement=True)
-
-# #     # 🔹 Foreign Keys
-# #     user_id = Column(Integer, ForeignKey('users_profiles.id'), nullable=False)
-# #     plan_id = Column(Integer, ForeignKey('hosting_plans.id'), nullable=False)
-
-# #     # 🔹 Order Information
-# #     order_number = Column(String(100), unique=True, nullable=False, index=True)
-# #     order_status = Column(String(50), default='pending')          # pending, active, cancelled, completed
-# #     payment_status = Column(String(50), default='pending')        # pending, paid, failed, refunded
-# #     billing_cycle = Column(String(50), nullable=False)            # monthly, quarterly, annual, etc.
-
-# #     # 🔹 Financial Details
-# #     total_amount = Column(Numeric(10, 2), nullable=False)
-# #     discount_amount = Column(Numeric(10, 2), default=0.00)
-# #     tax_amount = Column(Numeric(10, 2), default=0.00)
-# #     # grand_total = Column(Numeric(10, 2), nullable=False)
-# #     grand_total = Column(Numeric(10, 2), nullable=True)
-
-
-# #     # 🔹 Server Details (optional for hosting/server-based plans)
-# #     server_details = Column(JSON, nullable=True)
-
-# #     # 🔹 Payment Information
-# #     payment_method = Column(String(100), nullable=True)
-# #     payment_reference = Column(String(255), nullable=True)
-# #     payment_date = Column(DateTime(timezone=True), nullable=True)
-
-# #     # 🔹 Metadata
-# #     created_at = Column(DateTime(timezone=True), server_default=func.now())
-# #     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-# #     # 🔹 Relationships
-# #     user = relationship("UserProfile", back_populates="orders")
-# #     plan = relationship("HostingPlan", back_populates="orders")
-
-# #     # Link invoices to orders
-# #     invoices = relationship(
-# #         "Invoice",
-# #         back_populates="order",
-# #         cascade="all, delete-orphan"
-# #     )
-
-# #     # 🔹 Optional: Link referral earnings (if applicable)
-# #     referral_earnings = relationship(
-# #         "ReferralEarning",
-# #         back_populates="order",
-# #         cascade="all, delete-orphan"
-# #     )
-
-# #     def __repr__(self):
-# #         return f"<Order(id={self.id}, number='{self.order_number}', status='{self.order_status}', total={self.total_amount})>"
-
-
-# #     # 🔹 Add indexes for better performance
-# #     __table_args__ = (
-# #         Index('idx_order_user_status', 'user_id', 'order_status'),
-# #         Index('idx_order_payment_status', 'payment_status'),
-# #         Index('idx_order_created_date', 'created_at'),
-# #         Index('idx_order_number', 'order_number'),
-# #     )
-
-
-
-
 from sqlalchemy import Column, String, Integer, DateTime, Numeric, ForeignKey, JSON, Index, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -143,7 +28,7 @@ class Order(Base):
 
     # 🔹 Server Details (for hosting/server-based plans)
     server_details = Column(JSON, nullable=True)
-    
+
     # 🔹 Additional Order Details
     currency = Column(String(10), default='USD', nullable=False)
     promo_code = Column(String(50), nullable=True)
@@ -153,7 +38,13 @@ class Order(Base):
     payment_method = Column(String(100), nullable=True)  # stripe, paypal, bank_transfer, etc.
     payment_reference = Column(String(255), nullable=True)
     payment_date = Column(DateTime(timezone=True), nullable=True)
-    
+
+    # Razorpay specific fields
+    razorpay_order_id = Column(String(100), nullable=True, index=True)
+    razorpay_payment_id = Column(String(100), nullable=True)
+    paid_at = Column(DateTime(timezone=True), nullable=True)
+
+
     # 🔹 Subscription/Service Dates
     service_start_date = Column(DateTime(timezone=True), nullable=True)
     service_end_date = Column(DateTime(timezone=True), nullable=True)
@@ -165,13 +56,13 @@ class Order(Base):
 
     # 🔹 Relationships
     user = relationship(
-        "UserProfile", 
+        "UserProfile",
         back_populates="orders",
         foreign_keys=[user_id]
     )
-    
+
     plan = relationship(
-        "HostingPlan", 
+        "HostingPlan",
         back_populates="orders",
         foreign_keys=[plan_id]
     )
@@ -199,23 +90,23 @@ class Order(Base):
         # User-specific queries
         Index('idx_order_user_status', 'user_id', 'order_status'),
         Index('idx_order_user_payment_status', 'user_id', 'payment_status'),
-        
+
         # Admin dashboard queries
         Index('idx_order_status_payment', 'order_status', 'payment_status'),
         Index('idx_order_payment_status_date', 'payment_status', 'created_at'),
-        
+
         # Financial reporting
         Index('idx_order_created_date', 'created_at'),
         Index('idx_order_payment_date', 'payment_date'),
-        
+
         # Billing and subscription management
         Index('idx_order_billing_cycle', 'billing_cycle'),
         Index('idx_order_service_dates', 'service_start_date', 'service_end_date'),
-        
+
         # Quick lookups
         Index('idx_order_number', 'order_number'),
         Index('idx_order_plan', 'plan_id'),
-        
+
         # Comprehensive analytics
         Index('idx_order_comprehensive', 'user_id', 'order_status', 'payment_status', 'created_at'),
     )
@@ -226,10 +117,10 @@ class Order(Base):
     # 🔹 Optional: Helper methods for business logic
     def is_paid(self):
         return self.payment_status in ['paid', 'partially_refunded']
-    
+
     def is_active(self):
         return self.order_status == 'active' and self.is_paid()
-    
+
     def get_days_remaining(self):
         """Calculate days remaining for service"""
         if self.service_end_date and self.is_active():
@@ -237,17 +128,13 @@ class Order(Base):
             remaining = self.service_end_date - datetime.now(self.service_end_date.tzinfo)
             return remaining.days
         return 0
-    
+
     def calculate_refund_amount(self):
         """Calculate potential refund amount"""
         if not self.is_paid():
             return 0.00
-        
+
         # Basic refund logic - can be customized
         if self.order_status == 'cancelled':
             return self.grand_total * 0.8  # 80% refund
         return 0.00
-
-
-
-

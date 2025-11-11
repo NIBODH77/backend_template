@@ -6611,19 +6611,71 @@
 #         while True:
 #             number = "INV-" + "".join(secrets.choice(chars) for _ in range(length))
 #             result = await db.execute(
-#                 select(Invoice).where(Invoice.invoice_number == number)
-#             )
-#             if not result.scalar_one_or_none():
-#                 return number
-
-
-
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+#                 select(from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from typing import Optional
+from datetime import datetime
 from decimal import Decimal
+
+from app.models.order import Order
+
+
+class OrderService:
+    """Handle order creation and management"""
+
+    async def create_order(
+        self,
+        db: AsyncSession,
+        user_id: int,
+        plan_id: int,
+        billing_cycle: str,
+        amount: Decimal,
+        referral_code: Optional[str] = None
+    ) -> Order:
+        """Create a new order"""
+        order_number = await self._generate_order_number(db)
+        
+        order = Order(
+            user_id=user_id,
+            plan_id=plan_id,
+            order_number=order_number,
+            billing_cycle=billing_cycle,
+            total_amount=amount,
+            status="pending",
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(order)
+        await db.commit()
+        await db.refresh(order)
+        return order
+
+    async def get_order_by_razorpay_id(
+        self,
+        db: AsyncSession,
+        razorpay_order_id: str
+    ) -> Optional[Order]:
+        """Get order by Razorpay order ID"""
+        result = await db.execute(
+            select(Order).where(Order.razorpay_order_id == razorpay_order_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def _generate_order_number(self, db: AsyncSession) -> str:
+        """Generate unique order number"""
+        year = datetime.utcnow().year
+        prefix = f"ORD-{year}-"
+        
+        result = await db.execute(
+            select(Order.order_number)
+            .where(Order.order_number.like(f"{prefix}%"))
+            .order_by(Order.order_number.desc())
+            .limit(1)
+        )
+        last_order = result.scalar_one_or_none()
+        
+        next_num = int(last_order.split("-")[-1]) + 1 if last_order else 1
+        return f"{prefix}{next_num:05d}l
 import secrets
 import string
 
