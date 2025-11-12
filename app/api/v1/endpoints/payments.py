@@ -12,10 +12,23 @@ from app.services.order_service import OrderService
 from app.services.plan_service import PlanService
 from app.schemas.users import User
 from app.models.payment import PaymentType, PaymentStatus
+from app.core.config import settings
 from pydantic import BaseModel
 
 
 router = APIRouter()
+
+
+class RazorpayKeyResponse(BaseModel):
+    razorpay_key_id: str
+
+
+@router.get("/get-razorpay-key", response_model=RazorpayKeyResponse)
+async def get_razorpay_key():
+    """
+    Returns the Razorpay Key ID from the settings.
+    """
+    return {"razorpay_key_id": settings.RAZORPAY_KEY_ID}
 
 
 # --------------------------------------------------------

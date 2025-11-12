@@ -2,32 +2,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import uvicorn
+from fastapi.responses import FileResponse
+from sqlalchemy.engine import URL
 
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.core.database import engine, Base
-import asyncio
-from sqlalchemy.engine import URL
-
-
-
-# # Create database tables
-# Base.metadata.create_all(bind=engine)
-
-
-
-
 
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="RAMAERA Hosting Platform Backend API",
     version=settings.VERSION,
-    docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# CORS middleware
+# Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -35,31 +25,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Trusted hosts middleware
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=settings.ALLOWED_HOSTS
 )
 
-# Include API routes
+# API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Add exception handlers
-
-
-
-# ✅ Define your async DB initialization
+# Database initialization
 async def init_models():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# # ✅ Run it once when the app starts
-# @app.on_event("startup")
-# async def on_startup():
-#     await init_models()
+@app.on_event("startup")
+async def on_startup():
+    print("🔗 Database connection check...")
+    url = engine.url
+    safe_url = URL.create(
+        drivername=url.drivername,
+        username=url.username,
+        host=url.host,
+        port=url.port,
+        database=url.database
+    )
+    print(f"✅ Connected to database: {safe_url}")
+    await init_models()
+    print("📦 Tables initialized (if not already present).")
 
-
+# Root and health check endpoints
 @app.get("/")
 async def root():
     return {
@@ -70,7 +64,12 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
+    return {"status": "healthy"}
+
+# Endpoint for testing payment page
+@app.get("/test-payment", response_class=FileResponse)
+async def get_test_payment_page():
+    return "test_payment.html"
 
 if __name__ == "__main__":
     uvicorn.run(
@@ -78,29 +77,4 @@ if __name__ == "__main__":
         host="localhost",
         port=8000,
         reload=settings.DEBUG
-    
     )
-
-
-
-
-
-@app.on_event("startup")
-async def on_startup():
-    # Print the connected database URL safely (without password)
-    print("🔗 Database connection check...")
-
-    url = engine.url
-    safe_url = URL.create(
-        drivername=url.drivername,
-        username=url.username,
-        host=url.host,
-        port=url.port,
-        database=url.database
-    )
-
-    print(f"✅ Connected to database: {safe_url}")
-
-    # Optionally, ensure all models are created
-    await init_models()
-    print("📦 Tables initialized (if not already present).")
