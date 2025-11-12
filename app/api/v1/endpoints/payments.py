@@ -27,7 +27,7 @@ class CreatePaymentRequest(BaseModel):
     """
     payment_type: str  # 'subscription' or 'server'
     plan_id: int
-    billing_cycle: Optional[str] = 'monthly'  # For subscription
+    billing_cycle: Optional[str] = 'one_time'  # For subscription: 'one_time', 'monthly', 'quarterly', etc.
     server_config: Optional[Dict[str, Any]] = None  # For server purchase
 
 
@@ -73,22 +73,30 @@ async def create_payment_order(
 
     # Determine amount based on payment type
     if payment_request.payment_type == 'subscription':
-        # For 499 subscription plan
-        price_map = {
-            'monthly': plan.monthly_price,
-            'quarterly': plan.quarterly_price,
-            'annual': plan.annual_price,
-            'biennial': plan.biennial_price,
-            'triennial': plan.triennial_price
-        }
-        amount = price_map.get(payment_request.billing_cycle)
+        # For one-time premium subscription (₹499)
+        if payment_request.billing_cycle == 'one_time' or not payment_request.billing_cycle:
+            amount = plan.monthly_price  # Use monthly_price as one-time premium amount (₹499)
+            billing_cycle = 'one_time'
+        else:
+            # For recurring subscriptions
+            price_map = {
+                'monthly': plan.monthly_price,
+                'quarterly': plan.quarterly_price,
+                'annual': plan.annual_price,
+                'biennial': plan.biennial_price,
+                'triennial': plan.triennial_price
+            }
+            amount = price_map.get(payment_request.billing_cycle)
+            billing_cycle = payment_request.billing_cycle
+            
         if not amount:
-            raise HTTPException(status_code=400, detail="Invalid billing cycle")
+            raise HTTPException(status_code=400, detail="Invalid billing cycle or amount")
         
         metadata = {
             'plan_id': payment_request.plan_id,
-            'billing_cycle': payment_request.billing_cycle,
-            'plan_name': plan.name
+            'billing_cycle': billing_cycle,
+            'plan_name': plan.name,
+            'subscription_type': 'one_time_premium' if billing_cycle == 'one_time' else 'recurring'
         }
     else:
         # For server purchase

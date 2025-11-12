@@ -31,7 +31,7 @@ class PaymentService:
         payment_type: PaymentType,
         amount: Decimal,
         plan_id: Optional[int] = None,
-        billing_cycle: Optional[str] = None,
+        billing_cycle: Optional[str] = 'one_time',
         metadata: Optional[Dict[str, Any]] = None
     ) -> PaymentTransaction:
         """
