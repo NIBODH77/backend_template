@@ -73,6 +73,9 @@ class PaymentService:
             metadata=metadata or {}
         )
 
+
+        print("razorpay order created:", razorpay_order)
+
         # Create payment transaction record
         payment_transaction = PaymentTransaction(
             user_id=user_id,

@@ -113,6 +113,9 @@ async def create_payment_order(
             metadata=metadata
         )
 
+        # print("response is",type(payment_transaction))
+        # print("response is",payment_transaction.json())
+
         return {
             "success": True,
             "message": "Payment order created successfully",

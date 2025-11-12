@@ -1,8 +1,8 @@
-"""Add Razorpay fields to Order model
+"""initial_tables
 
-Revision ID: c0d2958a5735
-Revises: a8b405eab961
-Create Date: 2025-11-11 10:24:58.641639
+Revision ID: a90dee53a13a
+Revises: 714cac9e5206
+Create Date: 2025-11-11 17:13:57.680163
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c0d2958a5735'
-down_revision: Union[str, None] = 'a8b405eab961'
+revision: str = 'a90dee53a13a'
+down_revision: Union[str, None] = '714cac9e5206'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

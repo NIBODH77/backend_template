@@ -85,7 +85,7 @@ import re
 # Get database URL from environment or use SQLite as fallback
 raw_database_url = os.getenv(
     "DATABASE_URL",
-    "sqlite+aiosqlite:///./ramaera_hosting.db"
+    "postgresql+asyncpg://postgres:nibodh%40123@localhost:5432/ramaera_hosting"
 )
 
 # Convert PostgreSQL URL to async and remove unsupported parameters

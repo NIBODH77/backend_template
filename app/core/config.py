@@ -156,6 +156,10 @@ class Settings(BaseSettings):
         extra = "ignore"  # Ignore extra env variables
 
 
+
+    
+
+
 # ✅ Dependency injection ke liye function
 def get_settings() -> Settings:
     return Settings()

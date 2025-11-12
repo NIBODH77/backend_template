@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.api.v1.api import api_router
 from app.core.database import engine, Base
 import asyncio
+from sqlalchemy.engine import URL
+
 
 
 # # Create database tables
@@ -76,4 +78,29 @@ if __name__ == "__main__":
         host="localhost",
         port=8000,
         reload=settings.DEBUG
+    
     )
+
+
+
+
+
+@app.on_event("startup")
+async def on_startup():
+    # Print the connected database URL safely (without password)
+    print("🔗 Database connection check...")
+
+    url = engine.url
+    safe_url = URL.create(
+        drivername=url.drivername,
+        username=url.username,
+        host=url.host,
+        port=url.port,
+        database=url.database
+    )
+
+    print(f"✅ Connected to database: {safe_url}")
+
+    # Optionally, ensure all models are created
+    await init_models()
+    print("📦 Tables initialized (if not already present).")

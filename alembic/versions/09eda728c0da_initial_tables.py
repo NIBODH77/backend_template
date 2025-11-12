@@ -1,8 +1,8 @@
 """initial_tables
 
-Revision ID: 25fd4a457ea6
+Revision ID: 09eda728c0da
 Revises: 
-Create Date: 2025-11-11 14:37:37.433400
+Create Date: 2025-11-11 16:45:13.235012
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '25fd4a457ea6'
+revision: str = '09eda728c0da'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -124,6 +124,9 @@ def upgrade() -> None:
     sa.Column('payment_method', sa.String(length=100), nullable=True),
     sa.Column('payment_reference', sa.String(length=255), nullable=True),
     sa.Column('payment_date', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('razorpay_order_id', sa.String(length=100), nullable=True),
+    sa.Column('razorpay_payment_id', sa.String(length=100), nullable=True),
+    sa.Column('paid_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('service_start_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('service_end_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
@@ -146,6 +149,7 @@ def upgrade() -> None:
     op.create_index('idx_order_user_status', 'orders', ['user_id', 'order_status'], unique=False)
     op.create_index(op.f('ix_orders_order_number'), 'orders', ['order_number'], unique=True)
     op.create_index(op.f('ix_orders_plan_id'), 'orders', ['plan_id'], unique=False)
+    op.create_index(op.f('ix_orders_razorpay_order_id'), 'orders', ['razorpay_order_id'], unique=False)
     op.create_index(op.f('ix_orders_user_id'), 'orders', ['user_id'], unique=False)
     op.create_table('payment_methods',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -351,6 +355,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_payment_methods_user_id'), table_name='payment_methods')
     op.drop_table('payment_methods')
     op.drop_index(op.f('ix_orders_user_id'), table_name='orders')
+    op.drop_index(op.f('ix_orders_razorpay_order_id'), table_name='orders')
     op.drop_index(op.f('ix_orders_plan_id'), table_name='orders')
     op.drop_index(op.f('ix_orders_order_number'), table_name='orders')
     op.drop_index('idx_order_user_status', table_name='orders')
