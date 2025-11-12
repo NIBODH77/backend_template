@@ -26,7 +26,7 @@ class CreatePaymentRequest(BaseModel):
     Unified payment creation request for both subscription and server payments
     """
     payment_type: str  # 'subscription' or 'server'
-    plan_id: int
+    plan_id: Optional[int] = None  # Required only for server purchase, not for ₹499 premium plan
     billing_cycle: Optional[str] = 'one_time'  # For subscription: 'one_time', 'monthly', 'quarterly', etc.
     server_config: Optional[Dict[str, Any]] = None  # For server purchase
 
@@ -66,14 +66,10 @@ async def create_payment_order(
             detail="Invalid payment_type. Must be 'subscription' or 'server'"
         )
 
-    # Get plan details
-    plan = await plan_service.get_plan_by_id(db, payment_request.plan_id)
-    if not plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
     # Determine amount based on payment type
     if payment_request.payment_type == 'subscription':
         # ₹499 Premium Subscription - No discount, No tax, Direct ₹499
+        # plan_id is NOT required for this
         amount = Decimal('499.00')  # Fixed ₹499 premium amount
         billing_cycle = 'one_time'
         
@@ -88,6 +84,11 @@ async def create_payment_order(
         # For server purchase - plan_id is mandatory
         if not payment_request.plan_id:
             raise HTTPException(status_code=400, detail="plan_id is required for server purchase")
+        
+        # Get plan details for server purchase
+        plan = await plan_service.get_plan_by_id(db, payment_request.plan_id)
+        if not plan:
+            raise HTTPException(status_code=404, detail="Plan not found")
             
         amount = plan.monthly_price  # Base server cost
         
@@ -125,7 +126,7 @@ async def create_payment_order(
         # print("response is",type(payment_transaction))
         # print("response is",payment_transaction.json())
 
-        return {
+        response = {
             "success": True,
             "message": "Payment order created successfully",
             "payment": {
@@ -138,13 +139,26 @@ async def create_payment_order(
                 "currency": payment_transaction.currency,
                 "payment_type": payment_transaction.payment_type.value,
                 "activation_type": payment_transaction.activation_type.value
-            },
-            "plan": {
+            }
+        }
+        
+        # Add plan details only for server purchase
+        if payment_request.payment_type == 'server' and payment_request.plan_id:
+            plan = await plan_service.get_plan_by_id(db, payment_request.plan_id)
+            response["plan"] = {
                 "id": plan.id,
                 "name": plan.name,
                 "billing_cycle": payment_request.billing_cycle
             }
-        }
+        else:
+            # For ₹499 premium subscription
+            response["plan"] = {
+                "id": None,
+                "name": "Premium Subscription",
+                "billing_cycle": "one_time"
+            }
+        
+        return response
 
     except Exception as e:
         raise HTTPException(
