@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from fastapi.responses import FileResponse
 from sqlalchemy.engine import URL
@@ -32,6 +33,9 @@ app.add_middleware(
 
 # API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Database initialization
 async def init_models():
