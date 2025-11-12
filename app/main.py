@@ -73,7 +73,7 @@ async def health_check():
 # Endpoint for testing payment page
 @app.get("/test-payment", response_class=FileResponse)
 async def get_test_payment_page():
-    return "test_payment.html"
+    return "app/static/test_payment.html"
 
 if __name__ == "__main__":
     uvicorn.run(
