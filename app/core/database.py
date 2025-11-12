@@ -1,16 +1,8 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
 
-# Get DATABASE_URL from Replit environment variables
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set. Please create a PostgreSQL database in Replit.")
-
-# Ensure asyncpg driver is used
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+# Direct PostgreSQL connection
+DATABASE_URL = "postgresql+asyncpg://postgres:nibodh%40123@localhost:5432/ramaera_hosting"
 
 # Create async engine
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)
