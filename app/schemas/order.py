@@ -327,7 +327,7 @@ from decimal import Decimal
 # -------------------- ORDER SCHEMAS --------------------
 
 class OrderBase(BaseModel):
-    plan_id: int
+    plan_id: Optional[int] = None  # Optional for ₹499 premium subscription
     billing_cycle: str
     total_amount: Decimal
 
@@ -340,7 +340,7 @@ class OrderCreate(OrderBase):
         v = v.lower().replace("-", "_")
         valid_cycles = [
             'monthly', 'quarterly', 'semi_annual',
-            'annual', 'biennial', 'triennial'
+            'annual', 'biennial', 'triennial', 'one_time'
         ]
         if v not in valid_cycles:
             raise ValueError(f'Billing cycle must be one of: {", ".join(valid_cycles)}')

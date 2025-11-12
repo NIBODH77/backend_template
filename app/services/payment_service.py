@@ -57,10 +57,19 @@ class PaymentService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Calculate discount
-        discount_amount = self._calculate_discount(amount, user.discount_percent)
-        tax_amount = self._calculate_tax(amount - discount_amount)
-        total_amount = amount - discount_amount + tax_amount
+        # Special handling for ₹499 Premium Subscription
+        is_premium_plan = metadata and metadata.get('is_premium_plan', False)
+        
+        if is_premium_plan:
+            # ₹499 Premium Plan: No discount, No tax
+            discount_amount = Decimal('0.00')
+            tax_amount = Decimal('0.00')
+            total_amount = amount  # Exactly ₹499
+        else:
+            # Server purchase: Apply discount and tax
+            discount_amount = self._calculate_discount(amount, user.discount_percent)
+            tax_amount = self._calculate_tax(amount - discount_amount)
+            total_amount = amount - discount_amount + tax_amount
 
         # Determine activation type
         activation_type = ActivationType.REFERRAL if user.referred_by else ActivationType.DIRECT

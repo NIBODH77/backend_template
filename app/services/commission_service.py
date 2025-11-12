@@ -53,6 +53,17 @@ class CommissionService:
         # Check if commission distribution is required
         if not payment_transaction.requires_commission():
             return []
+        
+        # ✅ Commission केवल server purchase के लिए जहां user ने ₹499 premium plan लिया हो
+        enable_commission = payment_transaction.payment_metadata and \
+                          payment_transaction.payment_metadata.get('enable_commission', False)
+        
+        if not enable_commission:
+            # Mark as distributed but don't create earnings
+            payment_transaction.commission_distributed = True
+            payment_transaction.commission_distributed_at = datetime.utcnow()
+            await db.commit()
+            return []
 
         # Check if already distributed (idempotency)
         if payment_transaction.commission_distributed:

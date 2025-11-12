@@ -73,38 +73,39 @@ async def create_payment_order(
 
     # Determine amount based on payment type
     if payment_request.payment_type == 'subscription':
-        # For one-time premium subscription (₹499)
-        if payment_request.billing_cycle == 'one_time' or not payment_request.billing_cycle:
-            amount = plan.monthly_price  # Use monthly_price as one-time premium amount (₹499)
-            billing_cycle = 'one_time'
-        else:
-            # For recurring subscriptions
-            price_map = {
-                'monthly': plan.monthly_price,
-                'quarterly': plan.quarterly_price,
-                'annual': plan.annual_price,
-                'biennial': plan.biennial_price,
-                'triennial': plan.triennial_price
-            }
-            amount = price_map.get(payment_request.billing_cycle)
-            billing_cycle = payment_request.billing_cycle
+        # ₹499 Premium Subscription - No discount, No tax, Direct ₹499
+        amount = Decimal('499.00')  # Fixed ₹499 premium amount
+        billing_cycle = 'one_time'
+        
+        metadata = {
+            'plan_id': None,  # Not related to any server plan
+            'billing_cycle': billing_cycle,
+            'plan_name': 'Premium Subscription',
+            'subscription_type': 'premium_membership',
+            'is_premium_plan': True
+        }
+    else:
+        # For server purchase - plan_id is mandatory
+        if not payment_request.plan_id:
+            raise HTTPException(status_code=400, detail="plan_id is required for server purchase")
             
-        if not amount:
-            raise HTTPException(status_code=400, detail="Invalid billing cycle or amount")
+        amount = plan.monthly_price  # Base server cost
+        
+        # Check if user has active ₹499 premium subscription
+        from sqlalchemy import select, and_
+        from app.models.users import UserProfile
+        result = await db.execute(
+            select(UserProfile).where(UserProfile.id == current_user.id)
+        )
+        user = result.scalars().first()
+        has_premium = user.subscription_status == 'active' if user else False
         
         metadata = {
             'plan_id': payment_request.plan_id,
-            'billing_cycle': billing_cycle,
-            'plan_name': plan.name,
-            'subscription_type': 'one_time_premium' if billing_cycle == 'one_time' else 'recurring'
-        }
-    else:
-        # For server purchase
-        amount = plan.monthly_price  # Base server cost
-        metadata = {
-            'plan_id': payment_request.plan_id,
             'server_config': payment_request.server_config,
-            'plan_name': plan.name
+            'plan_name': plan.name,
+            'has_premium_subscription': has_premium,
+            'enable_commission': has_premium  # Commission केवल premium users के लिए
         }
 
     try:
@@ -186,9 +187,14 @@ async def verify_payment(
 
         # Create order record
         from app.schemas.order import OrderCreate
+        
+        # For ₹499 premium subscription, plan_id is None
+        plan_id = payment_transaction.payment_metadata.get('plan_id')
+        
         order_create = OrderCreate(
-            plan_id=payment_transaction.payment_metadata.get('plan_id'),
-            billing_cycle=payment_transaction.payment_metadata.get('billing_cycle', 'monthly'),
+            plan_id=plan_id,
+            billing_cycle=payment_transaction.payment_metadata.get('billing_cycle', 'one_time'),
+            total_amount=payment_transaction.total_amount,
             status='active',
             payment_method='razorpay',
             payment_status='paid'
