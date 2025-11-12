@@ -70,10 +70,10 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
-# Endpoint for testing payment page
+# Endpoint for testing payment page (React version)
 @app.get("/test-payment", response_class=FileResponse)
 async def get_test_payment_page():
-    return "app/static/test_payment.html"
+    return "app/static/index.html"
 
 if __name__ == "__main__":
     uvicorn.run(
